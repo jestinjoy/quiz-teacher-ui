@@ -1,14 +1,28 @@
 import React, { useState } from "react";
 import AddQuestionForm from "./components/AddQuestionForm";
 import AddQuizForm from "./components/AddQuizForm";
+import SelectQuestions from "./components/SelectQuestions";
+import AssignStudents from "./components/AssignStudents";
 
 function App() {
   const [view, setView] = useState("home");
-  const [createdQuiz, setCreatedQuiz] = useState(null);
+  const [quizId, setQuizId] = useState(null);
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
 
   const handleQuizCreated = (quiz) => {
-    setCreatedQuiz(quiz);
-    setView("quiz-created");
+    setQuizId(quiz.id);
+    setView("select-questions");
+  };
+
+  const handleQuestionsAssigned = () => {
+    setView("assign-students");
+  };
+
+  const handleFinishAssigning = () => {
+    alert("✅ Quiz setup complete!");
+    setView("home");
+    setQuizId(null);
+    setSelectedQuestions([]);
   };
 
   return (
@@ -41,14 +55,26 @@ function App() {
         </>
       )}
 
-      {view === "quiz-created" && createdQuiz && (
+      {view === "select-questions" && quizId && (
         <>
           <button onClick={() => setView("home")} style={{ marginBottom: "1rem" }}>
             ← Back to Home
           </button>
-          <h2>Quiz Created Successfully</h2>
-          <p><strong>ID:</strong> {createdQuiz.id}</p>
-          <p><strong>Title:</strong> {createdQuiz.title}</p>
+          <SelectQuestions
+            quizId={quizId}
+            selectedQuestions={selectedQuestions}
+            setSelectedQuestions={setSelectedQuestions}
+            onDone={handleQuestionsAssigned}
+          />
+        </>
+      )}
+
+      {view === "assign-students" && quizId && (
+        <>
+          <button onClick={() => setView("home")} style={{ marginBottom: "1rem" }}>
+            ← Back to Home
+          </button>
+          <AssignStudents quizId={quizId} onFinish={handleFinishAssigning} />
         </>
       )}
     </div>
