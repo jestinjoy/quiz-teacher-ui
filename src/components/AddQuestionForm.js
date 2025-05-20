@@ -1,35 +1,48 @@
-import React, { useState } from "react";
-import { BlockMath, InlineMath } from "react-katex";
-import "katex/dist/katex.min.css";
+import React, { useEffect, useState } from "react";
 
-const AddQuestionForm = () => {
-  const [questionText, setQuestionText] = useState("");
-  const [options, setOptions] = useState(["", "", "", ""]);
-  const [correctIndex, setCorrectIndex] = useState(null);
-  const [preview, setPreview] = useState(true);
+const AddQuizForm = ({ onQuizCreated }) => {
+  const [title, setTitle] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [totalMarks, setTotalMarks] = useState(10);
+  const [startTime, setStartTime] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [status, setStatus] = useState("ACTIVE");
 
-  const handleOptionChange = (index, value) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+  const [creating, setCreating] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
+
+  const teacherId = 1;
+
+  const loadQuizzes = async () => {
+    const res = await fetch(`http://localhost:8000/teacher/quizzes?created_by=${teacherId}`);
+    const data = await res.json();
+    setQuizzes(data);
   };
 
+  useEffect(() => {
+    loadQuizzes();
+  }, []);
+
   const handleSubmit = async () => {
+    if (!title || !startTime) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    setCreating(true);
+
     const payload = {
-      question_text: questionText,
-      question_type: "MCQ",
-      correct_answer: options[correctIndex],
-      feedback: "",
-      subcategory_id: 1,
-      created_by: 1,
+      title,
+      duration_minutes: durationMinutes,
+      total_marks: totalMarks,
+      start_time: new Date(startTime).toISOString(),
+      is_active: isActive,
+      status: status.toLowerCase(), // backend expects lowercase
       created_at: new Date().toISOString(),
-      options: options.map((text, i) => ({
-        text,
-        is_correct: i === correctIndex
-      }))
+      created_by: teacherId
     };
 
-    const res = await fetch("http://localhost:8000/teacher/add_question", {
+    const res = await fetch("http://localhost:8000/teacher/create_quiz", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -38,66 +51,101 @@ const AddQuestionForm = () => {
     });
 
     if (res.ok) {
-      alert("Question added!");
-      setQuestionText("");
-      setOptions(["", "", "", ""]);
-      setCorrectIndex(null);
+      const data = await res.json();
+      onQuizCreated(data);
+      await loadQuizzes();
+
+      // Reset
+      setTitle("");
+      setDurationMinutes(30);
+      setTotalMarks(10);
+      setStartTime("");
+      setIsActive(true);
+      setStatus("ACTIVE");
     } else {
-      alert("Error adding question");
+      alert("Quiz creation failed");
     }
+
+    setCreating(false);
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "auto", padding: "1rem" }}>
-      <h2>Add MCQ Question (LaTeX Supported)</h2>
+    <div>
+      <h2>Create New Quiz</h2>
 
-      <textarea
-        value={questionText}
-        onChange={(e) => setQuestionText(e.target.value)}
-        rows={4}
-        placeholder="Write your question here using LaTeX like \\frac{a}{b} + c = ?"
-        style={{ width: "100%", padding: "8px" }}
+      <label>Title:</label>
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
       />
 
-      {preview && (
-        <div className="preview">
-          <strong>Preview:</strong>
-          <BlockMath>{questionText}</BlockMath>
-        </div>
+      <label>Total Marks:</label>
+      <input
+        type="number"
+        value={totalMarks}
+        onChange={(e) => setTotalMarks(Number(e.target.value))}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+      />
+
+      <label>Duration (minutes):</label>
+      <input
+        type="number"
+        value={durationMinutes}
+        onChange={(e) => setDurationMinutes(Number(e.target.value))}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+      />
+
+      <label>Start Time:</label>
+      <input
+        type="datetime-local"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+      />
+
+      <label>Status:</label>
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+      >
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="COMPLETED">COMPLETED</option>
+      </select>
+
+      <label>
+        <input
+          type="checkbox"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+        />
+        {" "}Is Active
+      </label>
+
+      <div style={{ marginTop: "1rem" }}>
+        <button onClick={handleSubmit} disabled={creating}>
+          {creating ? "Creating..." : "Create Quiz"}
+        </button>
+      </div>
+
+      <hr style={{ margin: "2rem 0" }} />
+
+      <h3>My Quizzes</h3>
+      {quizzes.length === 0 ? (
+        <p>No quizzes created yet.</p>
+      ) : (
+        <ul>
+          {quizzes.map((q) => (
+            <li key={q.id}>
+              <strong>{q.title}</strong> — {q.status.toUpperCase()} — {q.total_marks} marks —{" "}
+              {new Date(q.start_time).toLocaleString("en-IN")}
+            </li>
+          ))}
+        </ul>
       )}
-
-      <h3>Options:</h3>
-      {options.map((opt, index) => (
-        <div key={index} style={{ marginBottom: "10px" }}>
-          <input
-            type="text"
-            value={opt}
-            onChange={(e) => handleOptionChange(index, e.target.value)}
-            placeholder={`Option ${index + 1}`}
-            style={{ width: "100%", padding: "8px" }}
-          />
-          {preview && (
-            <div style={{ backgroundColor: "#f0f0f0", padding: "6px" }}>
-              <InlineMath>{opt}</InlineMath>
-            </div>
-          )}
-          <label>
-            <input
-              type="radio"
-              name="correct"
-              checked={correctIndex === index}
-              onChange={() => setCorrectIndex(index)}
-            />
-            Correct Answer
-          </label>
-        </div>
-      ))}
-
-      <button onClick={handleSubmit} style={{ padding: "10px 20px", marginTop: "1rem" }}>
-        Submit
-      </button>
     </div>
   );
 };
 
-export default AddQuestionForm;
+export default AddQuizForm;
