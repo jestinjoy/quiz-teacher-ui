@@ -3,6 +3,9 @@ import AddQuestionForm from "./components/AddQuestionForm";
 import AddQuizForm from "./components/AddQuizForm";
 import SelectQuestions from "./components/SelectQuestions";
 import AssignStudents from "./components/AssignStudents";
+import QuizList from "./components/QuizList";
+import BulkUpload from "./components/BulkUpload";
+import ViewQuestions from "./components/ViewQuestions";
 
 function App() {
   const [view, setView] = useState("home");
@@ -19,7 +22,7 @@ function App() {
   };
 
   const handleFinishAssigning = () => {
-    alert("✅ Quiz setup complete!");
+    alert("\u2705 Quiz setup complete!");
     setView("home");
     setQuizId(null);
     setSelectedQuestions([]);
@@ -33,7 +36,10 @@ function App() {
           <button onClick={() => setView("add-question")} style={{ marginRight: "1rem" }}>
             Add Question
           </button>
-          <button onClick={() => setView("add-quiz")}>Add Quiz</button>
+          <button onClick={() => setView("add-quiz")} style={{ marginRight: "1rem" }}>Add Quiz</button>
+          <button onClick={() => setView("view-quizzes")} style={{ marginRight: "1rem" }}>View Quizzes</button>
+          <button onClick={() => setView("view-questions")} style={{ marginRight: "1rem" }}>View Questions</button>
+          <button onClick={() => setView("bulk-upload")}>Bulk Upload Questions</button>
         </>
       )}
 
@@ -55,6 +61,24 @@ function App() {
         </>
       )}
 
+      {view === "view-quizzes" && (
+        <>
+          <button onClick={() => setView("home")} style={{ marginBottom: "1rem" }}>
+            ← Back to Home
+          </button>
+          <QuizList />
+        </>
+      )}
+
+      {view === "view-questions" && (
+        <>
+          <button onClick={() => setView("home")} style={{ marginBottom: "1rem" }}>
+            ← Back to Home
+          </button>
+          <ViewQuestions />
+        </>
+      )}
+
       {view === "select-questions" && quizId && (
         <>
           <button onClick={() => setView("home")} style={{ marginBottom: "1rem" }}>
@@ -66,6 +90,12 @@ function App() {
             setSelectedQuestions={setSelectedQuestions}
             onDone={handleQuestionsAssigned}
           />
+        </>
+      )}
+
+      {view === "bulk-upload" && (
+        <>
+          <BulkUpload onBack={() => setView("home")} />
         </>
       )}
 
