@@ -6,6 +6,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
   const [totalMarks, setTotalMarks] = useState(10);
   const [startTime, setStartTime] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [randomOrder, setRandomOrder] = useState(false); // ✅ new state
   const [creating, setCreating] = useState(false);
 
   const teacherId = 1;
@@ -24,43 +25,50 @@ const AddQuizForm = ({ onQuizCreated }) => {
       total_marks: totalMarks,
       start_time: new Date(startTime).toISOString(),
       is_active: isActive,
+      random_order: randomOrder, // ✅ include in payload
       status: "ACTIVE", // Hardcoded
       created_at: new Date().toISOString(),
       created_by: teacherId
     };
 
-    const res = await fetch("http://localhost:8000/teacher/create_quiz", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const res = await fetch("http://localhost:8000/teacher/create_quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      onQuizCreated(data);
+      if (res.ok) {
+        const data = await res.json();
+        onQuizCreated(data);
 
-      // Reset
-      setTitle("");
-      setDurationMinutes(30);
-      setTotalMarks(10);
-      setStartTime("");
-      setIsActive(true);
-    } else {
-      alert("Quiz creation failed");
+        // Reset form
+        setTitle("");
+        setDurationMinutes(30);
+        setTotalMarks(10);
+        setStartTime("");
+        setIsActive(true);
+        setRandomOrder(false);
+      } else {
+        alert("❌ Quiz creation failed");
+      }
+    } catch (err) {
+      console.error("Quiz creation error:", err);
+      alert("⚠️ Error occurred while creating quiz");
     }
 
     setCreating(false);
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: "600px", margin: "auto" }}>
       <h2>Create New Quiz</h2>
 
       <label>Title:</label>
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+        style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
 
       <label>Total Marks:</label>
@@ -68,7 +76,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
         type="number"
         value={totalMarks}
         onChange={(e) => setTotalMarks(Number(e.target.value))}
-        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+        style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
 
       <label>Duration (minutes):</label>
@@ -76,7 +84,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
         type="number"
         value={durationMinutes}
         onChange={(e) => setDurationMinutes(Number(e.target.value))}
-        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+        style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
 
       <label>Start Time:</label>
@@ -84,23 +92,30 @@ const AddQuizForm = ({ onQuizCreated }) => {
         type="datetime-local"
         value={startTime}
         onChange={(e) => setStartTime(e.target.value)}
-        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+        style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
 
-      <label>
+      <label style={{ display: "block", marginBottom: "0.5rem" }}>
         <input
           type="checkbox"
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
-        />
-        {" "}Is Active
+        />{" "}
+        Is Active
       </label>
 
-      <div style={{ marginTop: "1rem" }}>
-        <button onClick={handleSubmit} disabled={creating}>
-          {creating ? "Creating..." : "Create Quiz"}
-        </button>
-      </div>
+      <label style={{ display: "block", marginBottom: "1rem" }}>
+        <input
+          type="checkbox"
+          checked={randomOrder}
+          onChange={(e) => setRandomOrder(e.target.checked)}
+        />{" "}
+        Randomize question order for each student
+      </label>
+
+      <button onClick={handleSubmit} disabled={creating} style={{ padding: "10px 20px" }}>
+        {creating ? "Creating..." : "Create Quiz"}
+      </button>
     </div>
   );
 };
