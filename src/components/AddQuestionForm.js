@@ -3,21 +3,21 @@ import { BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
 // Split plain text and math (<math>...</math>) blocks
-const preprocessLatex = (text) => {
-  const regex = /<math>(.*?)<\/math>/gs;
+const preprocessSegments = (text) => {
+  const regex = /<(math|code)>(.*?)<\/\1>/gs;
   let parts = [];
   let lastIndex = 0;
   const matches = [...text.matchAll(regex)];
 
   for (let match of matches) {
-    const [fullMatch, latexContent] = match;
+    const [fullMatch, tag, content] = match;
     const index = match.index;
 
     if (index > lastIndex) {
       parts.push({ type: "text", content: text.slice(lastIndex, index) });
     }
 
-    parts.push({ type: "math", content: latexContent });
+    parts.push({ type: tag, content: content });
     lastIndex = index + fullMatch.length;
   }
 
@@ -28,15 +28,26 @@ const preprocessLatex = (text) => {
   return parts;
 };
 
+
 const renderPreview = (text) => {
-  const parts = preprocessLatex(text);
-  return parts.map((part, index) =>
-    part.type === "math" ? (
-      <BlockMath key={index}>{part.content}</BlockMath>
-    ) : (
-      <div key={index} style={{ whiteSpace: "pre-wrap" }}>{part.content}</div>
-    )
-  );
+  const parts = preprocessSegments(text);
+  return parts.map((part, index) => {
+    if (part.type === "math") {
+      return <BlockMath key={index}>{part.content}</BlockMath>;
+    } else if (part.type === "code") {
+      return (
+        <pre key={index} style={{ background: "#f4f4f4", padding: "8px", whiteSpace: "pre-wrap" }}>
+          <code>{part.content}</code>
+        </pre>
+      );
+    } else {
+      return (
+        <div key={index} style={{ whiteSpace: "pre-wrap" }}>
+          {part.content}
+        </div>
+      );
+    }
+  });
 };
 
 const AddQuestionForm = () => {
@@ -179,13 +190,13 @@ const AddQuestionForm = () => {
       <h3 style={{ marginTop: "1rem" }}>Options:</h3>
       {options.map((opt, index) => (
         <div key={index} style={{ marginBottom: "10px" }}>
-          <input
-            type="text"
-            value={opt}
-            onChange={(e) => handleOptionChange(index, e.target.value)}
-            placeholder={`Option ${index + 1}`}
-            style={{ width: "100%", padding: "8px" }}
-          />
+            <textarea
+              value={opt}
+              onChange={(e) => handleOptionChange(index, e.target.value)}
+              placeholder={`Option ${index + 1}`}
+              rows={3}
+              style={{ width: "100%", padding: "8px", resize: "vertical" }}
+            />
           <div style={{ marginTop: "4px" }}>
             {renderPreview(opt)}
           </div>
