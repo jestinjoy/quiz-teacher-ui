@@ -189,28 +189,50 @@ const AddQuestionForm = () => {
       {/* Options */}
       <h3 style={{ marginTop: "1rem" }}>Options:</h3>
       {options.map((opt, index) => (
-        <div key={index} style={{ marginBottom: "10px" }}>
-            <textarea
-              value={opt}
-              onChange={(e) => handleOptionChange(index, e.target.value)}
-              placeholder={`Option ${index + 1}`}
-              rows={3}
-              style={{ width: "100%", padding: "8px", resize: "vertical" }}
-            />
-          <div style={{ marginTop: "4px" }}>
+        <div
+          key={index}
+          style={{
+            marginBottom: "20px",
+            padding: "12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            backgroundColor: "#f9f9f9"
+          }}
+        >
+          <label style={{ fontWeight: "bold", display: "block", marginBottom: "6px" }}>
+            Option {index + 1}
+          </label>
+          <textarea
+            value={opt}
+            onChange={(e) => handleOptionChange(index, e.target.value)}
+            placeholder={`Type Option ${index + 1}`}
+            rows={3}
+            style={{
+              width: "100%",
+              padding: "8px",
+              resize: "vertical",
+              fontSize: "14px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              backgroundColor: "#fff"
+            }}
+          />
+          <div style={{ marginTop: "6px" }}>
             {renderPreview(opt)}
           </div>
-          <label>
+          <label style={{ display: "block", marginTop: "8px" }}>
             <input
               type="radio"
               name="correct"
               checked={correctIndex === index}
               onChange={() => setCorrectIndex(index)}
+              style={{ marginRight: "6px" }}
             />
-            Correct Answer
+            Mark as Correct Answer
           </label>
         </div>
       ))}
+
 
       <button onClick={handleSubmit} style={{ padding: "10px 20px", marginTop: "1rem" }}>
         Submit

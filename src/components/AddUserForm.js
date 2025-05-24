@@ -8,7 +8,8 @@ const AddUserForm = () => {
     role: "student",
     college: "",
     batch: "",
-    semester: ""
+    semester: "",
+    course: "" // ✅ Added course
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -28,8 +29,14 @@ const AddUserForm = () => {
     if (res.ok) {
       alert("✅ User added successfully!");
       setForm({
-        name: "", email: "", password: "", role: "student",
-        college: "", batch: "", semester: ""
+        name: "",
+        email: "",
+        password: "",
+        role: "student",
+        college: "",
+        batch: "",
+        semester: "",
+        course: "" // ✅ Reset course
       });
     } else {
       const err = await res.json();
@@ -42,7 +49,7 @@ const AddUserForm = () => {
     <div>
       <h2>Add New User</h2>
 
-      {["name", "email", "password", "college", "batch", "semester"].map((field) => (
+      {["name", "email", "password", "college", "batch", "semester", "course"].map((field) => (
         <div key={field} style={{ marginBottom: "1rem" }}>
           <label>{field.charAt(0).toUpperCase() + field.slice(1)}:</label>
           <input
@@ -57,7 +64,12 @@ const AddUserForm = () => {
 
       <div style={{ marginBottom: "1rem" }}>
         <label>Role:</label>
-        <select name="role" value={form.role} onChange={handleChange} style={{ width: "100%", padding: "8px" }}>
+        <select
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          style={{ width: "100%", padding: "8px" }}
+        >
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
         </select>

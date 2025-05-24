@@ -8,6 +8,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
   const [isActive, setIsActive] = useState(true);
   const [randomOrder, setRandomOrder] = useState(false); // ✅ new state
   const [creating, setCreating] = useState(false);
+  const [quizEndTime, setQuizEndTime] = useState("");
 
   const teacherId = 1;
 
@@ -24,6 +25,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
       duration_minutes: durationMinutes,
       total_marks: totalMarks,
       start_time: new Date(startTime).toISOString(),
+      quiz_end_time: new Date(quizEndTime).toISOString(),
       is_active: isActive,
       random_order: randomOrder, // ✅ include in payload
       status: "ACTIVE", // Hardcoded
@@ -94,6 +96,15 @@ const AddQuizForm = ({ onQuizCreated }) => {
         onChange={(e) => setStartTime(e.target.value)}
         style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
+
+      <label>End Time:</label>
+      <input
+        type="datetime-local"
+        value={quizEndTime}
+        onChange={(e) => setQuizEndTime(e.target.value)}
+        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+      />
+
 
       <label style={{ display: "block", marginBottom: "0.5rem" }}>
         <input

@@ -9,6 +9,7 @@ import ViewQuestions from "./components/ViewQuestions";
 import AddUserForm from "./components/AddUserForm";
 import BulkUploadUsers from "./components/BulkUploadUsers";
 import LoginForm from "./components/LoginForm";
+import ManageCategories from "./components/ManageCategories"; // ✅ NEW IMPORT
 
 function App() {
   const [user, setUser] = useState(null);
@@ -83,6 +84,7 @@ function App() {
           <button onClick={() => setView("bulk-upload")}>📁 Bulk Upload Questions</button>
           <button onClick={() => setView("add-user")}>👤 Add User</button>
           <button onClick={() => setView("bulk-upload-users")}>📥 Bulk Upload Users</button>
+          <button onClick={() => setView("manage-categories")}>🗂️ Manage Categories</button>
         </div>
       )}
 
@@ -142,6 +144,12 @@ function App() {
         <>
           <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>
           <AssignStudents quizId={quizId} onFinish={handleFinishAssigning} />
+        </>
+      )}
+      {view === "manage-categories" && (
+        <>
+          <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>
+          <ManageCategories />
         </>
       )}
     </div>
