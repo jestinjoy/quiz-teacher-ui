@@ -2,6 +2,7 @@
   "name": "quiz-teacher-ui",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/admin",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -12,6 +13,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-katex": "^3.1.0",
+    "react-modal": "^3.16.3",
+    "react-router-dom": "^7.6.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },

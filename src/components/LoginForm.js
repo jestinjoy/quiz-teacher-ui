@@ -1,13 +1,17 @@
 // components/LoginForm.js
 import React, { useState } from "react";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
 const LoginForm = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
-    const res = await fetch("http://localhost:8000/teacher/login", {
+    const res = await fetch(`${API_BASE}/teacher/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

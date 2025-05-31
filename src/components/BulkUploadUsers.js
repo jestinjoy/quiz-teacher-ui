@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
 const BulkUploadUsers = ({ onBack }) => {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
@@ -21,7 +25,7 @@ const BulkUploadUsers = ({ onBack }) => {
 
     setUploading(true);
     try {
-      const res = await fetch("http://localhost:8000/teacher/bulk_upload_users", {
+      const res = await fetch(`${API_BASE}/teacher/bulk_upload_users`, {
         method: "POST",
         body: formData,
       });
@@ -36,8 +40,12 @@ const BulkUploadUsers = ({ onBack }) => {
   };
 
   return (
-    <div>
-      <h2>Bulk Upload Users</h2>
+    <div style={{ maxWidth: "600px", margin: "auto" }}>
+      <h2>📥 Bulk Upload Users</h2>
+      <p>
+        Please upload a CSV with the following headers:<br />
+        <code>name,email,password,role,college,batch,semester,course</code>
+      </p>
       <input type="file" accept=".csv" onChange={handleFileChange} />
       <br /><br />
       <button onClick={handleUpload} disabled={uploading}>

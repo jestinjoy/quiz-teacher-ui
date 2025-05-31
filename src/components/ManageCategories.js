@@ -3,7 +3,8 @@ import axios from "axios";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:8000"
-  : `http://${process.env.REACT_APP_SERVER_IP}:8000`;
+  : process.env.REACT_APP_SERVER_IP;
+
 
 export default function ManageCategories() {
   const [categories, setCategories] = useState([]);

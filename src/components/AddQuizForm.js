@@ -6,11 +6,15 @@ const AddQuizForm = ({ onQuizCreated }) => {
   const [totalMarks, setTotalMarks] = useState(10);
   const [startTime, setStartTime] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [randomOrder, setRandomOrder] = useState(false); // ✅ new state
+  const [randomOrder, setRandomOrder] = useState(false);
   const [creating, setCreating] = useState(false);
   const [quizEndTime, setQuizEndTime] = useState("");
 
   const teacherId = 1;
+
+  const API_BASE = window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : process.env.REACT_APP_SERVER_IP;
 
   const handleSubmit = async () => {
     if (!title || !startTime) {
@@ -25,16 +29,16 @@ const AddQuizForm = ({ onQuizCreated }) => {
       duration_minutes: durationMinutes,
       total_marks: totalMarks,
       start_time: new Date(startTime).toISOString(),
-      quiz_end_time: new Date(quizEndTime).toISOString(),
+      quiz_end_time: quizEndTime ? new Date(quizEndTime).toISOString() : null,
       is_active: isActive,
-      random_order: randomOrder, // ✅ include in payload
-      status: "ACTIVE", // Hardcoded
+      random_order: randomOrder,
+      status: "ACTIVE",
       created_at: new Date().toISOString(),
       created_by: teacherId
     };
 
     try {
-      const res = await fetch("http://localhost:8000/teacher/create_quiz", {
+      const res = await fetch(`${API_BASE}/teacher/create_quiz`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -49,6 +53,7 @@ const AddQuizForm = ({ onQuizCreated }) => {
         setDurationMinutes(30);
         setTotalMarks(10);
         setStartTime("");
+        setQuizEndTime("");
         setIsActive(true);
         setRandomOrder(false);
       } else {
@@ -97,14 +102,13 @@ const AddQuizForm = ({ onQuizCreated }) => {
         style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
 
-      <label>End Time:</label>
+      <label>End Time (optional):</label>
       <input
         type="datetime-local"
         value={quizEndTime}
         onChange={(e) => setQuizEndTime(e.target.value)}
-        style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+        style={{ display: "block", marginBottom: "1rem", width: "100%", padding: "8px" }}
       />
-
 
       <label style={{ display: "block", marginBottom: "0.5rem" }}>
         <input

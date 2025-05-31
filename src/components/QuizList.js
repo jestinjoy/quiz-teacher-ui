@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 
-const QuizList = () => {
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
+const QuizList = ({ onViewReport }) => {
   const [quizzes, setQuizzes] = useState([]);
 
   const fetchQuizzes = () => {
-    fetch("http://localhost:8000/teacher/quizzes?include_creator=true")
+    fetch(`${API_BASE}/teacher/quizzes?include_creator=true`)
       .then((res) => res.json())
       .then(setQuizzes);
   };
@@ -14,25 +18,31 @@ const QuizList = () => {
   }, []);
 
   const toggleActive = (quizId) => {
-    fetch(`http://localhost:8000/teacher/toggle_quiz_active/${quizId}`, {
-      method: "POST"
-    })
-      .then((res) => res.json())
+    fetch(`${API_BASE}/teacher/toggle_quiz_active/${quizId}`, { method: "POST" })
       .then(() => fetchQuizzes());
   };
 
   const toggleStatus = (quizId) => {
-    fetch(`http://localhost:8000/teacher/toggle_quiz_status/${quizId}`, {
-      method: "POST"
-    })
-      .then((res) => res.json())
+    fetch(`${API_BASE}/teacher/toggle_quiz_status/${quizId}`, { method: "POST" })
       .then(() => fetchQuizzes());
+  };
+
+  const deleteQuiz = (quizId) => {
+    if (window.confirm("Are you sure you want to delete this quiz?")) {
+      fetch(`${API_BASE}/teacher/delete_quiz/${quizId}`, { method: "DELETE" })
+        .then((res) => {
+          if (!res.ok) throw new Error("Deletion failed");
+          return res.json();
+        })
+        .then(() => fetchQuizzes())
+        .catch((err) => alert("Cannot delete quiz: " + err.message));
+    }
   };
 
   return (
     <div>
       <h2>Quiz List</h2>
-      <table border="1" cellPadding="8">
+      <table border="1" cellPadding="8" cellSpacing="0" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th>ID</th>
@@ -40,8 +50,8 @@ const QuizList = () => {
             <th>Total Marks</th>
             <th>Duration</th>
             <th>Created By</th>
-            <th>is_active</th>
-            <th>status</th>
+            <th>Is Active</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -56,12 +66,27 @@ const QuizList = () => {
               <td>{q.is_active ? "✅" : "❌"}</td>
               <td>{q.status}</td>
               <td>
-                <button onClick={() => toggleActive(q.id)}>
-                  Toggle Active
-                </button>
+                <button onClick={() => toggleActive(q.id)}>Toggle Active</button>
                 <button onClick={() => toggleStatus(q.id)} style={{ marginLeft: "0.5rem" }}>
                   Toggle Status
                 </button>
+                {q.status === "COMPLETED" && (
+                  <button
+                    onClick={() => onViewReport(q.id)}
+                    style={{ marginLeft: "0.5rem" }}
+                  >
+                    📊 View Report
+                  </button>
+                )}
+              {!q.attempted && (
+                <button
+                  onClick={() => deleteQuiz(q.id)}
+                  style={{ marginLeft: "0.5rem", color: "red" }}
+                >
+                  🗑️ Delete
+                </button>
+              )}
+
               </td>
             </tr>
           ))}

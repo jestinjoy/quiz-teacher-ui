@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
+
+
 // Split plain text and math (<math>...</math>) blocks
 const preprocessSegments = (text) => {
   const regex = /<(math|code)>(.*?)<\/\1>/gs;
@@ -17,7 +23,7 @@ const preprocessSegments = (text) => {
       parts.push({ type: "text", content: text.slice(lastIndex, index) });
     }
 
-    parts.push({ type: tag, content: content });
+    parts.push({ type: tag, content });
     lastIndex = index + fullMatch.length;
   }
 
@@ -27,7 +33,6 @@ const preprocessSegments = (text) => {
 
   return parts;
 };
-
 
 const renderPreview = (text) => {
   const parts = preprocessSegments(text);
@@ -57,12 +62,11 @@ const AddQuestionForm = () => {
   const [feedback, setFeedback] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
-
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/teacher/categories")
+    fetch(`${API_BASE}/teacher/categories`)
       .then(res => res.json())
       .then(setCategories)
       .catch(err => console.error("Category load failed:", err));
@@ -70,7 +74,7 @@ const AddQuestionForm = () => {
 
   useEffect(() => {
     if (categoryId) {
-      fetch(`http://localhost:8000/teacher/subcategories/${categoryId}`)
+      fetch(`${API_BASE}/teacher/subcategories/${categoryId}`)
         .then(res => res.json())
         .then(setSubcategories)
         .catch(err => console.error("Subcategory load failed:", err));
@@ -106,7 +110,7 @@ const AddQuestionForm = () => {
       }))
     };
 
-    const res = await fetch("http://localhost:8000/teacher/add_question", {
+    const res = await fetch(`${API_BASE}/teacher/add_question`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -118,7 +122,6 @@ const AddQuestionForm = () => {
       setOptions(["", "", "", ""]);
       setCorrectIndex(null);
       setFeedback("");
-      // Intentionally not resetting category/subcategory
     } else {
       alert("❌ Error adding question");
     }
@@ -232,7 +235,6 @@ const AddQuestionForm = () => {
           </label>
         </div>
       ))}
-
 
       <button onClick={handleSubmit} style={{ padding: "10px 20px", marginTop: "1rem" }}>
         Submit

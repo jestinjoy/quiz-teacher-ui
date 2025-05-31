@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
 const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDone }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -9,19 +13,17 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load categories on mount
   useEffect(() => {
-    fetch("http://localhost:8000/teacher/categories")
+    fetch(`${API_BASE}/teacher/categories`)
       .then((res) => res.json())
       .then(setCategories)
       .catch(console.error);
   }, []);
 
-  // Load subcategories when a category is selected
   useEffect(() => {
     setSelectedSubcategory("");
     if (selectedCategory) {
-      fetch(`http://localhost:8000/teacher/subcategories/${selectedCategory}`)
+      fetch(`${API_BASE}/teacher/subcategories/${selectedCategory}`)
         .then((res) => res.json())
         .then(setSubcategories)
         .catch(console.error);
@@ -30,11 +32,10 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
     }
   }, [selectedCategory]);
 
-  // Load questions when subcategory or category changes
   useEffect(() => {
     if (selectedCategory) {
       setLoading(true);
-      let url = "http://localhost:8000/teacher/questions";
+      let url = `${API_BASE}/teacher/questions`;
       url += selectedSubcategory
         ? `?subcategory_id=${selectedSubcategory}`
         : `?category_id=${selectedCategory}`;
@@ -55,6 +56,12 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
     );
   };
 
+  const handleSelectAll = () => {
+    const allIds = questions.map((q) => q.id);
+    const areAllSelected = allIds.every((id) => selectedQuestions.includes(id));
+    setSelectedQuestions(areAllSelected ? [] : allIds);
+  };
+
   const handleSubmit = () => {
     if (!quizId || selectedQuestions.length === 0) {
       alert("Please select at least one question.");
@@ -62,7 +69,7 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
     }
 
     setSubmitting(true);
-    fetch("http://localhost:8000/teacher/assign_questions", {
+    fetch(`${API_BASE}/teacher/assign_questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -76,7 +83,7 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
       })
       .then(() => {
         alert("Questions assigned successfully!");
-        onDone();  // proceed to AssignStudents screen
+        onDone();
       })
       .catch((err) => {
         console.error(err);
@@ -85,17 +92,16 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
       .finally(() => setSubmitting(false));
   };
 
+  const allIds = questions.map((q) => q.id);
+  const areAllSelected = allIds.length > 0 && allIds.every((id) => selectedQuestions.includes(id));
+
   return (
     <div>
       <h3>Select Questions for Quiz</h3>
 
-      {/* Category Selection */}
       <div style={{ marginBottom: "1rem" }}>
         <label>Category:</label>{" "}
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
+        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
           <option value="">-- Select Category --</option>
           {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
@@ -105,14 +111,10 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
         </select>
       </div>
 
-      {/* Subcategory Selection */}
       {subcategories.length > 0 && (
         <div style={{ marginBottom: "1rem" }}>
           <label>Subcategory:</label>{" "}
-          <select
-            value={selectedSubcategory}
-            onChange={(e) => setSelectedSubcategory(e.target.value)}
-          >
+          <select value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)}>
             <option value="">-- Select Subcategory --</option>
             {subcategories.map((sub) => (
               <option key={sub.id} value={sub.id}>
@@ -123,32 +125,35 @@ const SelectQuestions = ({ quizId, selectedQuestions, setSelectedQuestions, onDo
         </div>
       )}
 
-      {/* Question List */}
       {loading ? (
         <p>Loading questions...</p>
       ) : questions.length === 0 ? (
         <p>No questions available.</p>
       ) : (
-        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-          {questions.map((q) => (
-            <li key={q.id} style={{ marginBottom: "10px" }}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={selectedQuestions.includes(q.id)}
-                  onChange={() => handleToggle(q.id)}
-                  style={{ marginRight: "8px" }}
-                />
-                {q.question_text}
-              </label>
-            </li>
-          ))}
-        </ul>
+        <>
+          <button onClick={handleSelectAll} style={{ marginBottom: "1rem" }}>
+            {areAllSelected ? "Deselect All" : "Select All"}
+          </button>
+          <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+            {questions.map((q) => (
+              <li key={q.id} style={{ marginBottom: "10px" }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedQuestions.includes(q.id)}
+                    onChange={() => handleToggle(q.id)}
+                    style={{ marginRight: "8px" }}
+                  />
+                  {q.question_text}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       <div style={{ marginTop: "1rem" }}>
-        <strong>Selected Question IDs:</strong>{" "}
-        {selectedQuestions.join(", ") || "None"}
+        <strong>Selected Question IDs:</strong> {selectedQuestions.join(", ") || "None"}
       </div>
 
       <button

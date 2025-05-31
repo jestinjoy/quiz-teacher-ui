@@ -9,15 +9,17 @@ import ViewQuestions from "./components/ViewQuestions";
 import AddUserForm from "./components/AddUserForm";
 import BulkUploadUsers from "./components/BulkUploadUsers";
 import LoginForm from "./components/LoginForm";
-import ManageCategories from "./components/ManageCategories"; // ✅ NEW IMPORT
+import ManageCategories from "./components/ManageCategories";
+import QuizReport from "./components/QuizReport"; // ✅ New Import
+import ViewUsers from "./components/ViewUsers";
 
 function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState("home");
   const [quizId, setQuizId] = useState(null);
+  const [selectedQuizId, setSelectedQuizId] = useState(null); // ✅ For report view
   const [selectedQuestions, setSelectedQuestions] = useState([]);
 
-  // ✅ Restore login from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem("adminUser");
     if (savedUser) {
@@ -84,6 +86,7 @@ function App() {
           <button onClick={() => setView("bulk-upload")}>📁 Bulk Upload Questions</button>
           <button onClick={() => setView("add-user")}>👤 Add User</button>
           <button onClick={() => setView("bulk-upload-users")}>📥 Bulk Upload Users</button>
+          <button onClick={() => setView("view-users")}>👥 View Users</button>
           <button onClick={() => setView("manage-categories")}>🗂️ Manage Categories</button>
         </div>
       )}
@@ -104,9 +107,24 @@ function App() {
       {view === "view-quizzes" && (
         <>
           <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>
-          <QuizList />
+          <QuizList
+            onViewReport={(id) => {
+              setSelectedQuizId(id);
+              setView("quiz-report");
+            }}
+          />
         </>
       )}
+      {view === "quiz-report" && selectedQuizId && (
+        <QuizReport
+          quizId={selectedQuizId}
+          onBack={() => {
+            setSelectedQuizId(null);
+            setView("view-quizzes");
+          }}
+        />
+      )}
+
       {view === "view-questions" && (
         <>
           <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>
@@ -129,6 +147,13 @@ function App() {
           <BulkUploadUsers onBack={() => setView("home")} />
         </>
       )}
+      {view === "view-users" && (
+        <>
+          <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>
+          <ViewUsers />
+        </>
+    )}
+
       {view === "select-questions" && quizId && (
         <>
           <button onClick={() => setView("home")} style={{ margin: "1rem 0" }}>← Back</button>

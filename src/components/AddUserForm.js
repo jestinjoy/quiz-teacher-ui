@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
+
+
 const AddUserForm = () => {
   const [form, setForm] = useState({
     name: "",
@@ -20,7 +26,7 @@ const AddUserForm = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const res = await fetch("http://localhost:8000/teacher/add_user", {
+    const res = await fetch(`${API_BASE}/teacher/add_user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)

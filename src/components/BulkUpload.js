@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : process.env.REACT_APP_SERVER_IP;
+
+
+
 const BulkUpload = ({ onBack }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -9,14 +15,14 @@ const BulkUpload = ({ onBack }) => {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/teacher/categories")
+    fetch(`${API_BASE}/teacher/categories`)
       .then((res) => res.json())
       .then(setCategories);
   }, []);
 
   useEffect(() => {
     if (selectedCategory) {
-      fetch(`http://localhost:8000/teacher/subcategories/${selectedCategory}`)
+      fetch(`${API_BASE}/teacher/subcategories/${selectedCategory}`)
         .then((res) => res.json())
         .then(setSubcategories);
     } else {
@@ -33,7 +39,7 @@ const BulkUpload = ({ onBack }) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    fetch(`http://localhost:8000/teacher/bulk_upload_questions?subcategory_id=${selectedSubcategory}&created_by=1`, {
+    fetch(`${API_BASE}/teacher/bulk_upload_questions?subcategory_id=${selectedSubcategory}&created_by=1`, {
       method: "POST",
       body: formData,
     })
