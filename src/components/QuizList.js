@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import SelectQuestions from "./SelectQuestions";
+import AssignStudents from "./AssignStudents";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:8000"
@@ -6,9 +8,13 @@ const API_BASE = window.location.hostname === "localhost"
 
 const QuizList = ({ onViewReport }) => {
   const [quizzes, setQuizzes] = useState([]);
+  const [activeQuizId, setActiveQuizId] = useState(null);
+  const [showQuestionSelector, setShowQuestionSelector] = useState(false);
+  const [showStudentAssigner, setShowStudentAssigner] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
 
   const fetchQuizzes = () => {
-    fetch(`${API_BASE}/teacher/quizzes?include_creator=true`)
+    fetch(`${API_BASE}/teacher/quizzes?include_creator=true&include_summary=true`)
       .then((res) => res.json())
       .then(setQuizzes);
   };
@@ -41,57 +47,129 @@ const QuizList = ({ onViewReport }) => {
 
   return (
     <div>
-      <h2>Quiz List</h2>
-      <table border="1" cellPadding="8" cellSpacing="0" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Total Marks</th>
-            <th>Duration</th>
-            <th>Created By</th>
-            <th>Is Active</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {quizzes.map((q) => (
-            <tr key={q.id}>
-              <td>{q.id}</td>
-              <td>{q.title}</td>
-              <td>{q.total_marks}</td>
-              <td>{q.duration_minutes}</td>
-              <td>{q.created_by_name || `User ${q.created_by}`}</td>
-              <td>{q.is_active ? "✅" : "❌"}</td>
-              <td>{q.status}</td>
-              <td>
-                <button onClick={() => toggleActive(q.id)}>Toggle Active</button>
-                <button onClick={() => toggleStatus(q.id)} style={{ marginLeft: "0.5rem" }}>
-                  Toggle Status
-                </button>
-                {q.status === "COMPLETED" && (
-                  <button
-                    onClick={() => onViewReport(q.id)}
-                    style={{ marginLeft: "0.5rem" }}
-                  >
-                    📊 View Report
-                  </button>
-                )}
-              {!q.attempted && (
-                <button
-                  onClick={() => deleteQuiz(q.id)}
-                  style={{ marginLeft: "0.5rem", color: "red" }}
-                >
-                  🗑️ Delete
-                </button>
-              )}
+      <h2 style={{ marginBottom: "1rem" }}>📋 Quiz Management Dashboard</h2>
 
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {quizzes.map((q) => (
+        <div key={q.id} style={{
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          padding: "16px",
+          marginBottom: "1rem",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+        }}>
+          <div style={{ marginBottom: "0.5rem", display: "flex", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div>
+              <h3 style={{ margin: "0 0 4px" }}>{q.title}</h3>
+              <div style={{ fontSize: "0.9rem", color: "#666" }}>
+                Quiz ID: <strong>{q.id}</strong> | Created by: <strong>{q.created_by_name || `User ${q.created_by}`}</strong>
+              </div>
+              <div style={{ fontSize: "0.85rem", marginTop: "0.3rem" }}>
+                🕒 Start Time: {q.start_time ? new Date(q.start_time).toLocaleString() : "Not set"}
+                <br />
+                🛑 End Time: {q.quiz_end_time ? new Date(q.quiz_end_time).toLocaleString() : "Not set"}
+                <br />
+                👥 Students Assigned: {q.students_assigned ?? 0}
+                <br />
+                ✅ Students Attempted: {q.students_attempted ?? 0}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <span style={{
+                padding: "4px 10px",
+                borderRadius: "12px",
+                backgroundColor: q.is_active ? "#d4edda" : "#f8d7da",
+                color: q.is_active ? "#155724" : "#721c24",
+                fontSize: "0.85rem"
+              }}>
+                {q.is_active ? "Active" : "Inactive"}
+              </span>
+              <span style={{
+                padding: "4px 10px",
+                borderRadius: "12px",
+                backgroundColor: q.status === "COMPLETED" ? "#e2e3ff" : "#fff3cd",
+                color: "#333",
+                fontSize: "0.85rem"
+              }}>
+                {q.status}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+            ⏱ Duration: {q.duration_minutes} min | 📊 Total Marks: {q.total_marks}
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+            <button onClick={() => toggleActive(q.id)}>🔁 Toggle Active</button>
+            <button onClick={() => toggleStatus(q.id)}>🔄 Toggle Status</button>
+
+            {!q.has_questions && !q.has_assigned_students && (
+              <>
+                <button onClick={() => {
+                  setActiveQuizId(q.id);
+                  setShowQuestionSelector(true);
+                }}>
+                  ➕ Add Questions
+                </button>
+                <button onClick={() => {
+                  setActiveQuizId(q.id);
+                  setShowStudentAssigner(true);
+                }}>
+                  👥 Assign Students
+                </button>
+              </>
+            )}
+
+            {q.has_questions && !q.has_assigned_students && (
+              <button onClick={() => {
+                setActiveQuizId(q.id);
+                setShowStudentAssigner(true);
+              }}>
+                👥 Assign Students
+              </button>
+            )}
+
+            {q.status === "COMPLETED" && (
+              <button onClick={() => onViewReport(q.id)}>📊 View Report</button>
+            )}
+
+            {!q.attempted && (
+              <button onClick={() => deleteQuiz(q.id)} style={{ color: "red" }}>
+                🗑 Delete
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Embedded Question Selector */}
+      {showQuestionSelector && (
+        <div style={{ border: "1px solid #ccc", padding: "1rem", marginTop: "1rem" }}>
+          <SelectQuestions
+            quizId={activeQuizId}
+            selectedQuestions={selectedQuestions}
+            setSelectedQuestions={setSelectedQuestions}
+            onDone={() => {
+              setShowQuestionSelector(false);
+              setSelectedQuestions([]);
+              fetchQuizzes();
+            }}
+          />
+        </div>
+      )}
+
+      {/* Embedded Student Assigner */}
+      {showStudentAssigner && (
+        <div style={{ border: "1px solid #ccc", padding: "1rem", marginTop: "1rem" }}>
+          <AssignStudents
+            quizId={activeQuizId}
+            onFinish={() => {
+              setShowStudentAssigner(false);
+              fetchQuizzes();
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
